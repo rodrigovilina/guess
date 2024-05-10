@@ -3,18 +3,26 @@ use std::cmp::Ordering;
 use std::io::{self};
 use std::net::TcpStream;
 
+const WELCOME: &str = "Guess the number!";
+const ADDRESS: &str = "127.0.0.1:8010";
+const GUESS: &str = "Please input your guess.";
+const FAILED_READ: &str = "Failed to read line";
+const TOO_SMALL: &str = "Too small!";
+const TOO_BIG: &str = "Too big!";
+const YOU_WIN: &str = "You win!";
+
 fn main() {
-  println!("Guess the number!");
-  let mut stream: TcpStream = TcpStream::connect("127.0.0.1:8010").unwrap();
+  println!("{}", WELCOME);
+  let mut stream: TcpStream = TcpStream::connect(ADDRESS).unwrap();
 
   loop {
-    println!("Please input your guess.");
+    println!("{}", GUESS);
 
     let mut guess: String = String::new();
 
     io::stdin()
       .read_line(&mut guess)
-      .expect("Failed to read line");
+      .expect(FAILED_READ);
 
     let guess: u16 = match guess.trim().parse() {
       Ok(num) => num,
@@ -28,10 +36,10 @@ fn main() {
     let cmp: Option<Ordering> = get_cmp(&mut stream);
 
     match cmp {
-      Some(Ordering::Less) => println!("Too small!"),
-      Some(Ordering::Greater) => println!("Too big!"),
+      Some(Ordering::Less) => println!("{}", TOO_SMALL),
+      Some(Ordering::Greater) => println!("{}", TOO_BIG),
       Some(Ordering::Equal) => {
-        println!("You win!");
+        println!("{}", YOU_WIN);
         break;
       }
       None => {}

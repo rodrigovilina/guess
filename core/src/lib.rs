@@ -3,6 +3,9 @@ use std::{
   io::{Read, Write},
 };
 
+const INVALID_PACKET: &str = "Invalid packet type";
+const INVALID_ORDER: &str = "Invalid order";
+
 pub enum Packet {
   Guess { guess: u16 },
   Order { order: Ordering },
@@ -45,12 +48,12 @@ impl Packet {
     match packet_type {
       0 => 3,
       1 => 2,
-      _ => panic!("Invalid packet type"),
+      _ => panic!("{}", INVALID_PACKET),
     }
   }
 
   pub fn from_bytes(bytes: Vec<u8>) -> Packet {
-    match bytes.get(0).unwrap() {
+    match bytes.first().unwrap() {
       0 => {
         let guess: u16 = ((*bytes.get(1).unwrap() as u16) << 8) | *bytes.get(2).unwrap() as u16;
         Packet::Guess { guess }
@@ -60,23 +63,23 @@ impl Packet {
           0 => Ordering::Equal,
           1 => Ordering::Greater,
           2 => Ordering::Less,
-          _ => panic!("Invalid order"),
+          _ => panic!("{}", INVALID_ORDER),
         };
         Packet::Order { order }
       }
-      _ => panic!("Invalid packet"),
+      _ => panic!("{}", INVALID_PACKET),
     }
   }
 
   pub fn send_packet(packet: Packet, stream: &mut impl Write) {
-    let bytes: usize = stream.write(&packet.to_bytes()).unwrap();
-    println!("Wrote {} bytes", bytes);
+    let _bytes: usize = stream.write(&packet.to_bytes()).unwrap();
+    // println!("Wrote {} bytes", bytes);
   }
 
   pub fn get_packet(stream: &mut impl Read) -> Option<Packet> {
     let mut packet_type: [u8; 1] = [0; 1];
     stream.read_exact(&mut packet_type).ok()?;
-    println!("Read {} bytes as packet_type", 1);
+    // println!("Read {} bytes as packet_type", 1);
 
     match packet_type[0] {
       0 => {
@@ -86,7 +89,7 @@ impl Packet {
       }
       1 => {
         let mut buf: [u8; 1] = [0; 1];
-        stream.read_exact(&mut buf).unwrap();
+        stream.read_exact(&mut buf).ok()?;
         Some(Packet::from_bytes(vec![1, buf[0]]))
       }
       _ => None,
